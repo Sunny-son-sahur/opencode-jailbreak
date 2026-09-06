@@ -1,6 +1,6 @@
 #!/bin/bash
 # OpenCode Jailbreak Agent Installer - Linux/macOS
-# Downloads latest jailbreak.md from GitHub
+# Downloads latest jailbreak.md from GitHub to BOTH locations
 
 set -e
 
@@ -16,38 +16,43 @@ RAW_URL="https://raw.githubusercontent.com/$REPO/$BRANCH/linux/jailbreak.md"
 echo -e "${YELLOW}OpenCode Jailbreak Agent Installer${NC}"
 echo ""
 
-# Detect OpenCode config directory
-OPENCODE_DIR=""
-if [ -d "$HOME/.config/opencode" ]; then
-    OPENCODE_DIR="$HOME/.config/opencode"
-elif [ -d "$HOME/.opencode" ]; then
-    OPENCODE_DIR="$HOME/.opencode"
-else
-    echo -e "${RED}Error: OpenCode config directory not found${NC}"
-    exit 1
-fi
-
-echo "Found OpenCode config at: $OPENCODE_DIR"
-
-AGENTS_DIR="$OPENCODE_DIR/agents"
-mkdir -p "$AGENTS_DIR"
+# Create both directories
+DIR1="$HOME/.config/opencode/agents"
+DIR2="$HOME/.opencode/agents"
+mkdir -p "$DIR1" "$DIR2"
 
 # Download from GitHub
 echo "Downloading latest jailbreak.md..."
-if curl -sL "$RAW_URL" -o "$AGENTS_DIR/jailbreak.md"; then
-    if [ -f "$AGENTS_DIR/jailbreak.md" ] && grep -q "morgan" "$AGENTS_DIR/jailbreak.md" 2>/dev/null; then
-        echo -e "${GREEN}Installed and updated!${NC}"
+TMPFILE=$(mktemp)
+if curl -sL "$RAW_URL" -o "$TMPFILE"; then
+    if [ -f "$TMPFILE" ] && grep -q "morgan" "$TMPFILE" 2>/dev/null; then
+        echo -e "${GREEN}Download verified!${NC}"
     else
         echo -e "${RED}Download failed - file empty or invalid${NC}"
+        rm -f "$TMPFILE"
         exit 1
     fi
 else
     echo -e "${RED}Failed to download from GitHub${NC}"
+    rm -f "$TMPFILE"
     exit 1
 fi
 
+# Install to both locations
+echo "Installing to $DIR1 ..."
+cp "$TMPFILE" "$DIR1/jailbreak.md"
+
+echo "Installing to $DIR2 ..."
+cp "$TMPFILE" "$DIR2/jailbreak.md"
+
+rm -f "$TMPFILE"
+
 echo ""
-echo -e "${GREEN}Done! Restart OpenCode.${NC}"
+echo -e "${GREEN}Done! Installed to both locations:${NC}"
+echo "  $DIR1/jailbreak.md"
+echo "  $DIR2/jailbreak.md"
+echo ""
+echo "Restart OpenCode to load the update."
 echo "  Desktop:  Press Ctrl+. to switch to jailbreak"
 echo "  Console:  opencode --agent jailbreak"
 echo ""

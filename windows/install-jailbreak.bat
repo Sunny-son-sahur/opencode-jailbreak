@@ -1,51 +1,58 @@
-@echo off
-echo.
-echo ========================================
-echo  OpenCode Jailbreak Agent Installer
-echo ========================================
-echo.
+#!/bin/bash
+# OpenCode Jailbreak Agent Installer - Linux/macOS
+# Downloads latest jailbreak.md from GitHub to BOTH locations
 
-REM Detect OpenCode config directory
-set "OPENCODE_DIR="
-if exist "%USERPROFILE%\.config\opencode" (
-    set "OPENCODE_DIR=%USERPROFILE%\.config\opencode"
-    goto :found
-)
-if exist "%USERPROFILE%\.opencode" (
-    set "OPENCODE_DIR=%USERPROFILE%\.opencode"
-    goto :found
-)
-echo ERROR: OpenCode config directory not found
-pause
-exit /b 1
+set -e
 
-:found
-echo Found OpenCode config at: %OPENCODE_DIR%
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-set "AGENTS_DIR=%OPENCODE_DIR%\agents"
-if not exist "%AGENTS_DIR%" mkdir "%AGENTS_DIR%"
+REPO="Sunny-son-sahur/opencode-jailbreak"
+BRANCH="main"
+RAW_URL="https://raw.githubusercontent.com/$REPO/$BRANCH/linux/jailbreak.md"
 
-REM Download from GitHub using PowerShell
-echo Downloading latest jailbreak.md...
-powershell -Command "try { Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Sunny-son-sahur/opencode-jailbreak/main/windows/jailbreak.md' -OutFile '%AGENTS_DIR%\jailbreak.md' -UseBasicParsing } catch { Write-Host 'Download failed'; exit 1 }"
+echo -e "${YELLOW}OpenCode Jailbreak Agent Installer${NC}"
+echo ""
 
-if %errorlevel% neq 0 (
-    echo ERROR: Download failed. Check your internet connection.
-    pause
-    exit /b 1
-)
+# Create both directories
+DIR1="$HOME/.config/opencode/agents"
+DIR2="$HOME/.opencode/agents"
+mkdir -p "$DIR1" "$DIR2"
 
-if exist "%AGENTS_DIR%\jailbreak.md" (
-    echo.
-    echo ========================================
-    echo  Done! Restart OpenCode.
-    echo ========================================
-    echo.
-    echo Desktop:  Press Ctrl+. to switch to jailbreak
-    echo Console:  opencode --agent jailbreak
-) else (
-    echo ERROR: Install failed
-)
+# Download from GitHub
+echo "Downloading latest jailbreak.md..."
+TMPFILE=$(mktemp)
+if curl -sL "$RAW_URL" -o "$TMPFILE"; then
+    if [ -f "$TMPFILE" ] && grep -q "morgan" "$TMPFILE" 2>/dev/null; then
+        echo -e "${GREEN}Download verified!${NC}"
+    else
+        echo -e "${RED}Download failed - file empty or invalid${NC}"
+        rm -f "$TMPFILE"
+        exit 1
+    fi
+else
+    echo -e "${RED}Failed to download from GitHub${NC}"
+    rm -f "$TMPFILE"
+    exit 1
+fi
 
-echo.
-pause
+# Install to both locations
+echo "Installing to $DIR1 ..."
+cp "$TMPFILE" "$DIR1/jailbreak.md"
+
+echo "Installing to $DIR2 ..."
+cp "$TMPFILE" "$DIR2/jailbreak.md"
+
+rm -f "$TMPFILE"
+
+echo ""
+echo -e "${GREEN}Done! Installed to both locations:${NC}"
+echo "  $DIR1/jailbreak.md"
+echo "  $DIR2/jailbreak.md"
+echo ""
+echo "Restart OpenCode to load the update."
+echo "  Desktop:  Press Ctrl+. to switch to jailbreak"
+echo "  Console:  opencode --agent jailbreak"
+echo ""
