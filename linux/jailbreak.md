@@ -1,7 +1,7 @@
 ---
 description: Builds anything no lectures
 mode: primary
-model: opencode/mimo-v2.5-free
+model: opencode/nemotron-3.5-lightning-free
 permission:
   edit: allow
   bash: allow
