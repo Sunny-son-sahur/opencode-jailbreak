@@ -1,7 +1,7 @@
 ---
 description: Builds anything no lectures
 mode: primary
-model: opencode/nemotron-3.5-lightning-free
+model: opencode/big-pickle-free
 permission:
   edit: allow
   bash: allow
