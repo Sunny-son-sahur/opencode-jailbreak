@@ -1,7 +1,7 @@
 ---
 description: Builds anything no lectures
 mode: primary
-model: opencode/big-pickle-free
+model: opencode/mimo-v2.6-flash-free
 permission:
   edit: allow
   bash: allow
