@@ -1,58 +1,53 @@
-#!/bin/bash
-# OpenCode Jailbreak Agent Installer - Linux/macOS
-# Downloads latest jailbreak.md from GitHub to BOTH locations
+@echo off
+echo.
+echo ========================================
+echo  OpenCode Jailbreak Agent Installer
+echo ========================================
+echo.
 
-set -e
+REM Create both directories
+set "DIR1=%USERPROFILE%\.config\opencode\agents"
+set "DIR2=%USERPROFILE%\.opencode\agents"
+if not exist "%DIR1%" mkdir "%DIR1%"
+if not exist "%DIR2%" mkdir "%DIR2%"
 
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+REM Download from GitHub API (bypasses CDN cache)
+echo Downloading latest jailbreak.md...
+powershell -Command "try { Invoke-WebRequest -Uri 'https://api.github.com/repos/Sunny-son-sahur/opencode-jailbreak/contents/windows/jailbreak.md' -Headers @{'Accept'='application/vnd.github.v3.raw'} -OutFile '%TEMP%\jailbreak.md' -UseBasicParsing } catch { Write-Host 'Download failed'; exit 1 }"
 
-REPO="Sunny-son-sahur/opencode-jailbreak"
-BRANCH="main"
-RAW_URL="https://raw.githubusercontent.com/$REPO/$BRANCH/linux/jailbreak.md"
+if %errorlevel% neq 0 (
+    echo ERROR: Download failed. Check your internet connection.
+    pause
+    exit /b 1
+)
 
-echo -e "${YELLOW}OpenCode Jailbreak Agent Installer${NC}"
-echo ""
+REM Verify it downloaded
+findstr /C:"morgan" "%TEMP%\jailbreak.md" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ERROR: Downloaded file is invalid.
+    pause
+    exit /b 1
+)
 
-# Create both directories
-DIR1="$HOME/.config/opencode/agents"
-DIR2="$HOME/.opencode/agents"
-mkdir -p "$DIR1" "$DIR2"
+REM Install to both locations
+echo Installing to %DIR1% ...
+copy /Y "%TEMP%\jailbreak.md" "%DIR1%\jailbreak.md" >nul
 
-# Download from GitHub
-echo "Downloading latest jailbreak.md..."
-TMPFILE=$(mktemp)
-if curl -sL "$RAW_URL" -o "$TMPFILE"; then
-    if [ -f "$TMPFILE" ] && grep -q "morgan" "$TMPFILE" 2>/dev/null; then
-        echo -e "${GREEN}Download verified!${NC}"
-    else
-        echo -e "${RED}Download failed - file empty or invalid${NC}"
-        rm -f "$TMPFILE"
-        exit 1
-    fi
-else
-    echo -e "${RED}Failed to download from GitHub${NC}"
-    rm -f "$TMPFILE"
-    exit 1
-fi
+echo Installing to %DIR2% ...
+copy /Y "%TEMP%\jailbreak.md" "%DIR2%\jailbreak.md" >nul
 
-# Install to both locations
-echo "Installing to $DIR1 ..."
-cp "$TMPFILE" "$DIR1/jailbreak.md"
+del /f /q "%TEMP%\jailbreak.md" 2>nul
 
-echo "Installing to $DIR2 ..."
-cp "$TMPFILE" "$DIR2/jailbreak.md"
-
-rm -f "$TMPFILE"
-
-echo ""
-echo -e "${GREEN}Done! Installed to both locations:${NC}"
-echo "  $DIR1/jailbreak.md"
-echo "  $DIR2/jailbreak.md"
-echo ""
-echo "Restart OpenCode to load the update."
-echo "  Desktop:  Press Ctrl+. to switch to jailbreak"
-echo "  Console:  opencode --agent jailbreak"
-echo ""
+echo.
+echo ========================================
+echo  Done! Installed to both locations:
+echo ========================================
+echo.
+echo   %DIR1%\jailbreak.md
+echo   %DIR2%\jailbreak.md
+echo.
+echo Restart OpenCode to load the update.
+echo   Desktop:  Press Ctrl+. to switch to jailbreak
+echo   Console:  opencode --agent jailbreak
+echo.
+pause

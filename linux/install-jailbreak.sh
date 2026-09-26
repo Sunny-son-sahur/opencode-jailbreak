@@ -11,7 +11,7 @@ NC='\033[0m'
 
 REPO="Sunny-son-sahur/opencode-jailbreak"
 BRANCH="main"
-RAW_URL="https://raw.githubusercontent.com/$REPO/$BRANCH/linux/jailbreak.md"
+RAW_URL="https://api.github.com/repos/$REPO/contents/linux/jailbreak.md"
 
 echo -e "${YELLOW}OpenCode Jailbreak Agent Installer${NC}"
 echo ""
@@ -24,7 +24,7 @@ mkdir -p "$DIR1" "$DIR2"
 # Download from GitHub
 echo "Downloading latest jailbreak.md..."
 TMPFILE=$(mktemp)
-if curl -sL "$RAW_URL" -o "$TMPFILE"; then
+if curl -sL -H "Accept: application/vnd.github.v3.raw" "$RAW_URL" -o "$TMPFILE"; then
     if [ -f "$TMPFILE" ] && grep -q "morgan" "$TMPFILE" 2>/dev/null; then
         echo -e "${GREEN}Download verified!${NC}"
     else
